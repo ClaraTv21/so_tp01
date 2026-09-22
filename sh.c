@@ -28,33 +28,35 @@ Fill in the lines below with the name and email of the group members.
 Replace XX with the contribution of each group member in the development of the work.
 
 Name <clara21ufmg@gmail.com> 50%
-Name <email@ufmg.br> 50%
-
-3. Solutions
-
-Briefly describe the solutions implemented for this project and justify their choices.
+Name <nathallyfernandes@ufmg.br> 50%
 
 a) Motivação e decisões de projeto
-
-
+O principal objetivo do projeto foi estender um shell base (inspirado no xv6) para compreender na prática a manipulação de processos e descritores de arquivos no Linux. Optamos por utilizar a chamada `execvp` em vez de `execv`, pois ela resolve automaticamente o PATH dos executáveis, simplificando a chamada de comandos comuns. Para a expansão de variáveis (Tarefa 6), optamos por alocar dinamicamente um novo buffer de memória para o token substituído e liberar o token antigo, garantindo que variáveis de tamanhos distintos fossem expandidas sem causar buffer overflow, mantendo a estabilidade do shell.
 
 b) Resumo da implementação
-
-
+- Tarefa 1 (fork): Criamos a função `fork1` que encapsula a chamada `fork()`, adicionando tratamento de erro imediato caso o processo não possa ser criado.
+- Tarefa 2 (exec): Na `handle_simple_cmd`, utilizamos `execvp` passando o nome do comando e o vetor de argumentos.
+- Tarefa 3 (redirecionamento): Em `handle_redirection`, usamos `open` com as flags adequadas (leitura ou escrita) e `dup2` para substituir a entrada padrão (FD 0) ou saída padrão (FD 1).
+- Tarefa 4 (pipes): Criamos um pipe com `pipe(p)`. Em seguida, fazemos dois forks: o filho da esquerda tem sua saída (FD 1) redirecionada para `p[1]`, e o filho da direita tem sua entrada (FD 0) conectada a `p[0]`. O processo pai fecha os descritores do pipe e dá `wait` em ambos.
+- Tarefa 5 (built-ins): Interceptamos `cd`, `exit` e `export` na função `handle_builtin` executando-os no próprio processo pai (sem fork). Usamos `chdir()`, `exit()` e `setenv()` respectivamente.
+- Tarefa 6 (expansão): A `expand_vars` varre as strings em busca do caractere '$', isola o nome da variável, busca o valor via `getenv()` e remonta a string com o valor recuperado, ou com uma string vazia caso a variável não exista.
 
 c) Casos ambíguos
-
-
+- 'cd' sem argumentos: O comportamento padrão de shells é ir para a home do usuário. Tratamos isso chamando `getenv("HOME")` caso o argumento de diretório seja nulo.
+- Variáveis de ambiente inexistentes: Se o usuário digitar um comando como `echo $VARIAVEL_FANTASMA`, a função `expand_vars` substitui o token por uma string vazia, evitando falhas de segmentação (segmentation fault) e simulando o comportamento real do bash.
+- Múltiplos pipes ou falhas: Garantimos o fechamento rigoroso de todos os descritores de arquivo (FDs) não utilizados nos processos filhos do pipe para evitar travamentos por EOF não atingido.
 
 d) Testes realizados
-
-
+- Execução automatizada da suíte de testes do professor rodando o script `./grade.sh`, englobando os casos `test1.sh` a `test13.sh`.
+- Testes manuais intensivos no terminal do shell para validar a persistência do estado das variáveis de ambiente: `export TESTE=funciona`, seguido por um `echo $TESTE` e um `cd` utilizando a variável criada.
+- Verificação visual de processos zumbis utilizando o comando `ps -aux` em um terminal paralelo durante a execução de longas cadeias de pipes.
 
 4. Bibliographic references
 
-Add the bibliographic references here.
-
-*/
+- Material e slides da disciplina de Sistemas Operacionais.
+- Man pages do Linux para chamadas de sistema: `man 2 fork`, `man 3 execvp`, `man 2 dup2`, `man 2 pipe`, `man 3 setenv`.
+- Código-fonte do xv6, desenvolvido pelo MIT (curso 6.828).
+- STEVENS, W. Richard; RAGO, Stephen A. Advanced Programming in the UNIX Environment. 3. ed. Addison-Wesley, 2013.
 
 /****************************************************************
  * Simplified xv6 Shell
