@@ -20,7 +20,7 @@ Respostas podem sem tanto em português como em inglês.
 
 The group members declare that all code developed for this project is their own.
 The group members declare that they have not copied material from the Internet
-  nor obtained code from third parties.
+nor obtained code from third parties.
 
 2. Group members and allocation of effort
 
@@ -236,9 +236,42 @@ void handle_pipe(struct pipecmd *pcmd, int *p, int r) {
  * (no pipe, no redirection) -- see how it is called in main() below.
  */
 int handle_builtin(struct execcmd *ecmd) {
-    /* TODO: implemente cd, exit e export*/
-    (void)ecmd;
-    return 0;
+    if (ecmd->argv[0] == 0) return 0;
+
+    // Comando 'cd'
+    if (strcmp(ecmd->argv[0], "cd") == 0) {
+        char *path = ecmd->argv[1];
+        if (!path) path = getenv("HOME");
+        
+        if (chdir(path) < 0) {
+            fprintf(stderr, "cd: cannot change directory to %s\n", path);
+        }
+        return 1;
+    }
+
+    // Comando 'exit'
+    if (strcmp(ecmd->argv[0], "exit") == 0) {
+        int code = 0;
+        if (ecmd->argv[1]) {
+            code = atoi(ecmd->argv[1]);
+        }
+        exit(code);
+    }
+
+    // Comando 'export'
+    if (strcmp(ecmd->argv[0], "export") == 0) {
+        if (ecmd->argv[1]) {
+            char *eq = strchr(ecmd->argv[1], '=');
+            if (eq) {
+                *eq = '\0'; // Divide a string no '='
+                char *val = eq + 1;
+                setenv(ecmd->argv[1], val, 1);
+            }
+        }
+        return 1;
+    }
+
+    return 0; // Não é um comando built-in
 }
 
 /* Task 6: expand environment variables ($VAR) inside a token.
@@ -261,10 +294,44 @@ int handle_builtin(struct execcmd *ecmd) {
  * being substituted.
  */
 char *expand_vars(char *token) {
-    /* TODO: implemente a expansao de $VAR aqui */
-    return token;
-}
+    if (!token) return token;
 
+    char *dollar = strchr(token, '$');
+    if (!dollar) return token; // Nenhuma variável para expandir
+
+    // Aloca um buffer seguro para o novo token expandido
+    char *new_token = malloc(1024);
+    memset(new_token, 0, 1024);
+
+    char *src = token;
+    char *dst = new_token;
+
+    while (*src) {
+        if (*src == '$') {
+            src++;
+            char var_name[256];
+            int i = 0;
+            
+            // Lê o nome da variável (letras, números ou underscore)
+            while (*src && (isalnum(*src) || *src == '_') && i < 255) {
+                var_name[i++] = *src++;
+            }
+            var_name[i] = '\0';
+
+            char *val = getenv(var_name);
+            if (val) {
+                strcpy(dst, val);
+                dst += strlen(val);
+            }
+        } else {
+            *dst++ = *src++;
+        }
+    }
+    *dst = '\0';
+    
+    free(token); // Libera o ponteiro original alocado pelo mkcopy
+    return new_token;   
+}
 int getcmd(char *buf, int nbuf) {
     if (isatty(fileno(stdin)))
         fprintf(stdout, "$ ");
