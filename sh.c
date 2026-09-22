@@ -27,8 +27,8 @@ nor obtained code from third parties.
 Fill in the lines below with the name and email of the group members.
 Replace XX with the contribution of each group member in the development of the work.
 
-Name <clara21ufmg@gmail.com> 50%
-Name <nathallyfernandes@ufmg.br> 50%
+Name <clara21ufmg@gmail.com> 50% - Clara Garcia Tavares
+Name <nathallyfernandes@ufmg.br> 50% - Náthally Fernandes de Brito Oliveira
 
 a) Motivação e decisões de projeto
 O principal objetivo do projeto foi estender um shell base (inspirado no xv6) para compreender na prática a manipulação de processos e descritores de arquivos no Linux. Optamos por utilizar a chamada `execvp` em vez de `execv`, pois ela resolve automaticamente o PATH dos executáveis, simplificando a chamada de comandos comuns. Para a expansão de variáveis (Tarefa 6), optamos por alocar dinamicamente um novo buffer de memória para o token substituído e liberar o token antigo, garantindo que variáveis de tamanhos distintos fossem expandidas sem causar buffer overflow, mantendo a estabilidade do shell.
